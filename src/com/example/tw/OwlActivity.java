@@ -15,6 +15,7 @@ import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
 import org.andengine.extension.physics.box2d.util.Vector2Pool;
+import org.andengine.extension.physics.box2d.util.constants.PhysicsConstants;
 import org.andengine.input.sensor.acceleration.AccelerationData;
 import org.andengine.input.sensor.acceleration.IAccelerationListener;
 import org.andengine.opengl.texture.TextureManager;
@@ -53,7 +54,7 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 	private Sprite mOwlSprite;
 	private BitmapTextureAtlas mBitmapTextureAtlas;
 	private TextureRegion mOwlRunTextureRegion;
-	private TextureRegion mOwlCatchTextureRegion;
+	private TextureRegion mPillarTextureRegion, mBackgroundTextureRegion;
 
 	private static final int CAMERA_WIDTH = 480;
 	private static final int CAMERA_HEIGHT = 800;
@@ -104,14 +105,21 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 				128);
 		BitmapTextureAtlas BitmapTowerTextureAtlas = new BitmapTextureAtlas(
 				getTextureManager(), 30, 250);
+		BitmapTextureAtlas BitmapBackgroundTextureAtlas = new BitmapTextureAtlas(
+				getTextureManager(), CAMERA_WIDTH, CAMERA_HEIGHT);
 		final String assetsBasePath = "gfx/";
 		BitmapTextureAtlasTextureRegionFactory.setAssetBasePath(assetsBasePath);
 		mOwlRunTextureRegion = BitmapTextureAtlasTextureRegionFactory
 				.createFromAsset(mBitmapTextureAtlas, this, "owl1.png", 0, 0);
-		mOwlCatchTextureRegion = BitmapTextureAtlasTextureRegionFactory
-				.createFromAsset(BitmapTowerTextureAtlas, this, "tower.png", 0, 0);
+		mPillarTextureRegion = BitmapTextureAtlasTextureRegionFactory
+				.createFromAsset(BitmapTowerTextureAtlas, this, "tower.png", 0,
+						0);
+		mBackgroundTextureRegion = BitmapTextureAtlasTextureRegionFactory
+				.createFromAsset(BitmapBackgroundTextureAtlas, this,
+						"background.png", 0, 0);
 		mEngine.getTextureManager().loadTexture(mBitmapTextureAtlas);
 		mEngine.getTextureManager().loadTexture(BitmapTowerTextureAtlas);
+		mEngine.getTextureManager().loadTexture(BitmapBackgroundTextureAtlas);
 	}
 
 	/**
@@ -145,26 +153,40 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 	protected Scene onCreateScene() {
 		mEngine.registerUpdateHandler(new FPSLogger());
 		mScene = new Scene();
-		Background background = new Background(Color.TRANSPARENT);
+		Background background = new Background(Color.CYAN);
 		mScene.setBackground(background);
 		Vector2 gravity = new Vector2(0, SensorManager.GRAVITY_EARTH);
 		boolean allowSleep = false;
 		mPhysicsWorld = new PhysicsWorld(gravity, allowSleep);
 
-		final Sprite owlRunner;
-		final Body bodyRunner;
-		final Sprite owlCatcher;
-		final Body bodyCatcher;
+		// Sprite UI
+		final Sprite owlRunnerSprite;
+		// Physics body
+		final Body owlRunnerBody;
 
-		owlRunner = new Sprite(0.0f, 0.0f, mOwlRunTextureRegion,
-				getVertexBufferObjectManager());
-		bodyRunner = PhysicsFactory.createBoxBody(mPhysicsWorld, owlRunner,
-				BodyType.DynamicBody, FIXTURE_DEF);
+		final Sprite pillarOneSprite;
+		final Body pillarOneBody;
 
-		owlCatcher = new Sprite(100.0f, 350.0f, mOwlCatchTextureRegion,
+		final Sprite pillarTwoSprite;
+		final Body pillarTwoBody;
+
+		final Sprite backgroundSprite = new Sprite(0.0f, 0.0f,
+				mBackgroundTextureRegion, getVertexBufferObjectManager());
+
+		owlRunnerSprite = new Sprite(0.0f, 0.0f, mOwlRunTextureRegion,
 				getVertexBufferObjectManager());
-		bodyCatcher = PhysicsFactory.createBoxBody(mPhysicsWorld, owlCatcher,
-				BodyType.StaticBody, FIXTURE_DEF);
+		owlRunnerBody = PhysicsFactory.createBoxBody(mPhysicsWorld,
+				owlRunnerSprite, BodyType.DynamicBody, FIXTURE_DEF);
+
+		pillarOneSprite = new Sprite(100.0f, 350.0f, mPillarTextureRegion,
+				getVertexBufferObjectManager());
+		pillarOneBody = PhysicsFactory.createBoxBody(mPhysicsWorld,
+				pillarOneSprite, BodyType.StaticBody, FIXTURE_DEF);
+
+		pillarTwoSprite = new Sprite(300.0f, 350.0f, mPillarTextureRegion,
+				getVertexBufferObjectManager());
+		pillarTwoBody = PhysicsFactory.createBoxBody(mPhysicsWorld,
+				pillarTwoSprite, BodyType.StaticBody, FIXTURE_DEF);
 
 		Rectangle rect_top = new Rectangle(0, 0, CAMERA_WIDTH, 0,
 				getVertexBufferObjectManager());
@@ -187,20 +209,33 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 				BodyType.StaticBody, FIXTURE_DEF);
 		Body wall_bottom = PhysicsFactory.createBoxBody(mPhysicsWorld,
 				rect_bottom, BodyType.StaticBody, FIXTURE_DEF);
-
-		mScene.attachChild(owlRunner);
-		mScene.attachChild(owlCatcher);
+		// attache the sprites to the scene
+		mScene.attachChild(backgroundSprite);
+		mScene.attachChild(owlRunnerSprite);
+		mScene.attachChild(pillarOneSprite);
+		mScene.attachChild(pillarTwoSprite);
 		mScene.attachChild(rect_left);
 		mScene.attachChild(rect_bottom);
 		mScene.attachChild(rect_right);
 		mScene.attachChild(rect_top);
 
+		// Create the physics connector.
+		// This connector will help in updating the sprite ui positions
+		// and rotations by getting the data from the sprite body
+		// which will be updated when onUpdate of PhysicsWorld instance is
+		// called.
+		// onUpdate of PhysicsWolrd will get called when the scene updateHandler
+		// is assigned to this Physics world.
 		boolean update_position = true;
 		boolean update_rotation = true;
-		PhysicsConnector owlRunnerConnector = new PhysicsConnector(owlRunner,
-				bodyRunner, update_position, update_rotation);
-		PhysicsConnector owlCatcherConnector = new PhysicsConnector(owlCatcher,
-				bodyCatcher, update_position, update_rotation);
+		PhysicsConnector owlRunnerConnector = new PhysicsConnector(
+				owlRunnerSprite, owlRunnerBody, update_position, false);
+		PhysicsConnector pillarOneConnector = new PhysicsConnector(
+				pillarOneSprite, pillarOneBody, update_position,
+				update_rotation);
+		PhysicsConnector pillarTwoConnector = new PhysicsConnector(
+				pillarTwoSprite, pillarTwoBody, update_position,
+				update_rotation);
 		PhysicsConnector lineTopConnector = new PhysicsConnector(rect_top,
 				wall_top, update_position, update_rotation);
 		PhysicsConnector lineBottomConnector = new PhysicsConnector(
@@ -211,7 +246,8 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 				wall_right, update_position, update_rotation);
 
 		mPhysicsWorld.registerPhysicsConnector(owlRunnerConnector);
-		mPhysicsWorld.registerPhysicsConnector(owlCatcherConnector);
+		mPhysicsWorld.registerPhysicsConnector(pillarOneConnector);
+		mPhysicsWorld.registerPhysicsConnector(pillarTwoConnector);
 		mPhysicsWorld.registerPhysicsConnector(lineTopConnector);
 		mPhysicsWorld.registerPhysicsConnector(lineBottomConnector);
 		mPhysicsWorld.registerPhysicsConnector(lineLeftConnector);
