@@ -1,4 +1,4 @@
-package com.example.tw;
+package com.game.owly;
 
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.options.EngineOptions;
@@ -6,6 +6,7 @@ import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.primitive.Line;
 import org.andengine.entity.primitive.Rectangle;
+import org.andengine.entity.scene.IOnSceneTouchListener;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.shape.IAreaShape;
@@ -18,12 +19,14 @@ import org.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.andengine.extension.physics.box2d.util.constants.PhysicsConstants;
 import org.andengine.input.sensor.acceleration.AccelerationData;
 import org.andengine.input.sensor.acceleration.IAccelerationListener;
+import org.andengine.input.touch.TouchEvent;
 import org.andengine.opengl.texture.TextureManager;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
 import org.andengine.opengl.texture.region.TextureRegion;
 import org.andengine.opengl.vbo.DrawType;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
+import org.andengine.ui.activity.SimpleLayoutGameActivity;
 import org.andengine.util.color.Color;
 
 import android.hardware.SensorManager;
@@ -172,6 +175,7 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 
 		final Sprite backgroundSprite = new Sprite(0.0f, 0.0f,
 				mBackgroundTextureRegion, getVertexBufferObjectManager());
+		backgroundSprite.setHeight(mCamera.getHeight());
 
 		owlRunnerSprite = new Sprite(0.0f, 0.0f, mOwlRunTextureRegion,
 				getVertexBufferObjectManager());
@@ -273,5 +277,10 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 		Vector2Pool.recycle(gravity);
 
 	}
-
+	
+	@Override
+	public void onBackPressed() {
+		finish();
+		super.onBackPressed();
+	}
 }

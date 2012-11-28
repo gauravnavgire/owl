@@ -1,0 +1,98 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0099cc"
+    tools:context=".MainMenuActivity"
+    android:id="@+id/container" >
+
+    <!--
+         The primary full-screen view. This can be replaced with whatever view
+         is needed to present your content, e.g. VideoView, SurfaceView,
+         TextureView, etc.
+    -->
+
+    <ImageView
+        android:id="@+id/fullscreen_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:keepScreenOn="true"
+        android:scaleType="fitXY"
+        android:src="@drawable/background"
+        android:text="@string/dummy_content"
+        android:textColor="#33b5e5"
+        android:textSize="50sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:layout_width="fill_parent"
+        android:layout_height="150dip"
+        android:layout_marginTop="50dip"
+        android:scaleType="fitXY"
+        android:src="@drawable/owly_logo" />
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center" >
+
+        <ImageButton
+            android:id="@+id/play_btn"
+            android:layout_width="150dip"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="50dip"
+            android:background="@android:color/transparent"
+            android:src="@drawable/play" />
+
+        <ImageButton
+            android:id="@+id/howtoplay_btn"
+            android:layout_width="150dip"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/play_btn"
+            android:background="@android:color/transparent"
+            android:src="@drawable/howto" />
+
+        <ImageButton
+            android:id="@+id/about_btn"
+            android:layout_width="150dip"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/howtoplay_btn"
+            android:background="@android:color/transparent"
+            android:src="@drawable/about" />
+    </RelativeLayout>
+
+    <ImageButton
+        android:id="@+id/speaker"
+        android:layout_width="50dip"
+        android:layout_height="50dip"
+        android:layout_gravity="bottom|left"
+        android:background="@android:color/transparent"
+        android:paddingBottom="1dip"
+        android:src="@drawable/speaker" />
+
+    <!--
+         This FrameLayout insets its children based on system windows using
+         android:fitsSystemWindows.
+    -->
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true" >
+
+        <LinearLayout
+            android:id="@+id/fullscreen_content_controls"
+            style="?buttonBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:background="@color/black_overlay"
+            android:orientation="horizontal"
+            tools:ignore="UselessParent" >
+
+        </LinearLayout>
+    </FrameLayout>
+
+</FrameLayout>

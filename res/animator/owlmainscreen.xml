@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:ordering="together" >
+
+ <!--   <objectAnimator
+        android:duration="5000"
+        android:propertyName="x"
+        android:repeatCount="10"
+        android:repeatMode="reverse"
+        android:valueFrom="10"
+        android:valueTo="400"
+        android:valueType="intType" /> -->
+    <objectAnimator
+        android:duration="5000"
+        android:propertyName="y"
+        android:repeatCount="10"
+         android:valueFrom="10"
+        android:repeatMode="reverse"
+        android:valueTo="300"
+        android:valueType="intType" />
+
+</set>
