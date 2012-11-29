@@ -287,6 +287,7 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 				if (mOwlRunnerSprite.collidesWith(mPillarTwoSprite)) {
 					mCollionsText.setText("" + ++mCount + " with Pillar 2");
 				}
+				mCollionsText.invalidateText();
 			}
 		});
 
@@ -391,7 +392,6 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 			} else if (this.mY + this.getHeight() > OwlActivity.CAMERA_HEIGHT) {
 				this.mPhysicsHandler.setVelocityY(-OwlActivity.DEMO_VELOCITY);
 			}
-
 			super.onManagedUpdate(pSecondsElapsed);
 		}
 	}
