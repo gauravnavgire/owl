@@ -9,6 +9,9 @@ import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.primitive.Rectangle;
+import org.andengine.entity.scene.IOnAreaTouchListener;
+import org.andengine.entity.scene.IOnSceneTouchListener;
+import org.andengine.entity.scene.ITouchArea;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.sprite.AnimatedSprite;
@@ -16,11 +19,13 @@ import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.util.FPSLogger;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
+import org.andengine.extension.physics.box2d.PhysicsConnectorManager;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
 import org.andengine.extension.physics.box2d.util.Vector2Pool;
 import org.andengine.input.sensor.acceleration.AccelerationData;
 import org.andengine.input.sensor.acceleration.IAccelerationListener;
+import org.andengine.input.touch.TouchEvent;
 import org.andengine.opengl.font.Font;
 import org.andengine.opengl.font.FontFactory;
 import org.andengine.opengl.texture.TextureOptions;
@@ -38,6 +43,10 @@ import android.util.DisplayMetrics;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 
@@ -54,8 +63,8 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
  */
 
 public class OwlActivity extends SimpleBaseGameActivity implements
-		IAccelerationListener {
-	private static OwlActivity instance;
+		IAccelerationListener, IOnSceneTouchListener, IOnAreaTouchListener {
+
 	private DisplayMetrics mMetrics;
 	private Camera mCamera;
 	public Scene mScene;
@@ -69,7 +78,7 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 	private TextureRegion mPillarTextureRegion, mBackgroundTextureRegion;
 
 	private static final int CAMERA_WIDTH = 480;
-	private static final int CAMERA_HEIGHT = 800;
+	private static final int CAMERA_HEIGHT = 860;
 	private static final float DEMO_VELOCITY = 100.0f;
 
 	// Box2D variables
@@ -79,6 +88,8 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 	 * of an object while it’s inside the physics world.
 	 */
 	private PhysicsWorld mPhysicsWorld;
+	private float mGravityX;
+	private float mGravityY;
 	private static float mDensity = 0.5f;
 	private static float mElasticity = 0.5f;
 	private static float mFriction = 0.0f;
@@ -87,7 +98,6 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 
 	@Override
 	public EngineOptions onCreateEngineOptions() {
-		instance = this;
 		mMetrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(mMetrics);
 		this.mCamera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
@@ -97,10 +107,6 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 				CAMERA_WIDTH, CAMERA_HEIGHT);
 		return new EngineOptions(fullScreen, orientation, resolutionPolicy,
 				mCamera);
-	}
-
-	public static OwlActivity getInstance() {
-		return instance;
 	}
 
 	/**
@@ -268,29 +274,6 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 		mPhysicsWorld.registerPhysicsConnector(lineLeftConnector);
 		mPhysicsWorld.registerPhysicsConnector(lineRightConnector);
 
-		mOwlRunnerSprite.registerUpdateHandler(new IUpdateHandler() {
-
-			@Override
-			public void reset() {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void onUpdate(float pSecondsElapsed) {
-				mEngineUpdateText.setText("Engine update : " + pSecondsElapsed
-						+ " secs");
-				if (mOwlRunnerSprite.collidesWith(mPillarOneSprite)) {
-					mCollionsText.setText("" + ++mCount + " with Pillar 1");
-				}
-
-				if (mOwlRunnerSprite.collidesWith(mPillarTwoSprite)) {
-					mCollionsText.setText("" + ++mCount + " with Pillar 2");
-				}
-				mCollionsText.invalidateText();
-			}
-		});
-
 		this.enableAccelerationSensor(this);
 		mScene.registerUpdateHandler(mPhysicsWorld);
 
@@ -310,33 +293,50 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 				.getWidth()) / 2;
 		final float centerY = (OwlActivity.CAMERA_HEIGHT - this.mOwlRunTextureRegion
 				.getHeight()) / 2;
-		
-		final Ball ball = new Ball(centerX, centerY, this.mOwlRunTextureRegion,
+		final Owl owl = new Owl(centerX, centerY, this.mOwlRunTextureRegion,
 				this.getVertexBufferObjectManager());
+		FixtureDef fixdef = PhysicsFactory.createFixtureDef(1, 1, 1);
 		Body owlAutoRunnerBody = PhysicsFactory.createBoxBody(mPhysicsWorld,
-				ball, BodyType.DynamicBody, FIXTURE_DEF);
-		PhysicsConnector owlAutoRunnerConnector = new PhysicsConnector(
-				ball, owlAutoRunnerBody, update_position, false);
-		//mPhysicsWorld.registerPhysicsConnector(owlAutoRunnerConnector);
+				owl, BodyType.DynamicBody, fixdef);
+		owl.setUserData(owlAutoRunnerBody);
+		PhysicsConnector owlAutoRunnerConnector = new PhysicsConnector(owl,
+				owlAutoRunnerBody, update_position, false);
+		mPhysicsWorld.registerPhysicsConnector(owlAutoRunnerConnector);
 
-		mScene.attachChild(ball);
+		this.mScene.registerTouchArea(mOwlRunnerSprite);
+		this.mScene.registerTouchArea(owl);
+
+		mScene.attachChild(owl);
+
+		mPhysicsWorld.setContactListener(new ContactListener() {
+
+			@Override
+			public void preSolve(Contact contact, Manifold oldManifold) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void postSolve(Contact contact, ContactImpulse impulse) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void endContact(Contact contact) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void beginContact(Contact contact) {
+				contact.getFixtureA();
+				contact.getFixtureB();
+
+			}
+		});
 
 		return mScene;
-	}
-
-	private class GameUpdater implements IUpdateHandler {
-
-		@Override
-		public void onUpdate(float pSecondsElapsed) {
-
-		}
-
-		@Override
-		public void reset() {
-			// TODO Auto-generated method stub
-
-		}
-
 	}
 
 	@Override
@@ -347,8 +347,9 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 
 	@Override
 	public void onAccelerationChanged(AccelerationData pAccelerationData) {
-		final Vector2 gravity = Vector2Pool.obtain(pAccelerationData.getX(),
-				pAccelerationData.getY());
+		mGravityX = pAccelerationData.getX();
+		mGravityY = pAccelerationData.getY();
+		final Vector2 gravity = Vector2Pool.obtain(mGravityX, mGravityY);
 		this.mPhysicsWorld.setGravity(gravity);
 		Vector2Pool.recycle(gravity);
 	}
@@ -366,10 +367,10 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 		this.mFont.load();
 	}
 
-	private static class Ball extends AnimatedSprite {
+	private static class Owl extends AnimatedSprite {
 		private final PhysicsHandler mPhysicsHandler;
 
-		public Ball(final float pX, final float pY,
+		public Owl(final float pX, final float pY,
 				final TiledTextureRegion pTextureRegion,
 				final VertexBufferObjectManager pVertexBufferObjectManager) {
 			super(pX, pY, pTextureRegion, pVertexBufferObjectManager);
@@ -395,4 +396,44 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 			super.onManagedUpdate(pSecondsElapsed);
 		}
 	}
+
+	private void jumpOwl(final Sprite owl) {
+		final Body owlBody = (Body) owl.getUserData();
+		final Vector2 velocity = Vector2Pool.obtain(this.mGravityX * -50,
+				this.mGravityY * -50);
+		owlBody.setLinearVelocity(velocity);
+		Vector2Pool.recycle(velocity);
+	}
+
+	@Override
+	public void onResumeGame() {
+		super.onResumeGame();
+
+		this.enableAccelerationSensor(this);
+	}
+
+	@Override
+	public void onPauseGame() {
+		super.onPauseGame();
+
+		this.disableAccelerationSensor();
+	}
+
+	@Override
+	public boolean onAreaTouched(TouchEvent pSceneTouchEvent,
+			ITouchArea pTouchArea, float pTouchAreaLocalX,
+			float pTouchAreaLocalY) {
+		if (pSceneTouchEvent.isActionDown()) {
+			Sprite owl = (Sprite) pTouchArea;
+			this.jumpOwl(owl);
+		}
+		return false;
+	}
+
+	@Override
+	public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }
