@@ -143,6 +143,7 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 		mBackgroundTextureRegion = BitmapTextureAtlasTextureRegionFactory
 				.createFromAsset(BitmapBackgroundTextureAtlas, this,
 						"background.png", 0, 0);
+		
 		mEngine.getTextureManager().loadTexture(mBitmapTextureAtlas);
 		mEngine.getTextureManager().loadTexture(BitmapTowerTextureAtlas);
 		mEngine.getTextureManager().loadTexture(BitmapBackgroundTextureAtlas);
