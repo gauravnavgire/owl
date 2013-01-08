@@ -1,10 +1,14 @@
 package com.game.owly;
 
+import java.util.Random;
+
 import javax.microedition.khronos.opengles.GL10;
 
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.handler.IUpdateHandler;
 import org.andengine.engine.handler.physics.PhysicsHandler;
+import org.andengine.engine.handler.timer.ITimerCallback;
+import org.andengine.engine.handler.timer.TimerHandler;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
@@ -33,6 +37,7 @@ import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
 import org.andengine.opengl.texture.region.TextureRegion;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
+import org.andengine.opengl.util.GLState;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.color.Color;
@@ -72,14 +77,15 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 	private Text mCollionsText, mEngineUpdateText;
 	private static int mCount = 0;
 	// Sprite UI
-	private Sprite mOwlRunnerSprite, mPillarOneSprite, mPillarTwoSprite;
+	private Sprite mPillarOneSprite, mPillarTwoSprite;
+	private AnimatedSprite mOwlySprite;
 	private BitmapTextureAtlas mBitmapTextureAtlas;
-	private TiledTextureRegion mOwlRunTextureRegion;
+	private TiledTextureRegion mOwlyTextureRegion, mFishTextureRegion;
 	private TextureRegion mPillarTextureRegion, mBackgroundTextureRegion;
 
 	private static final int CAMERA_WIDTH = 480;
 	private static final int CAMERA_HEIGHT = 860;
-	private static final float DEMO_VELOCITY = 100.0f;
+	private static final float FISH_VELOCITY = 100.0f;
 
 	// Box2D variables
 	/**
@@ -125,8 +131,8 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 	@Override
 	protected void onCreateResources() {
 		// Textures
-		mBitmapTextureAtlas = new BitmapTextureAtlas(getTextureManager(), 64,
-				128);
+		mBitmapTextureAtlas = new BitmapTextureAtlas(getTextureManager(), 200,
+				200);
 		BitmapTextureAtlas BitmapTowerTextureAtlas = new BitmapTextureAtlas(
 				getTextureManager(), 30, 250);
 		BitmapTextureAtlas BitmapBackgroundTextureAtlas = new BitmapTextureAtlas(
@@ -134,16 +140,19 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 				TextureOptions.DEFAULT);
 		final String assetsBasePath = "gfx/";
 		BitmapTextureAtlasTextureRegionFactory.setAssetBasePath(assetsBasePath);
-		mOwlRunTextureRegion = BitmapTextureAtlasTextureRegionFactory
+		mOwlyTextureRegion = BitmapTextureAtlasTextureRegionFactory
 				.createTiledFromAsset(mBitmapTextureAtlas, this, "owl1.png", 0,
-						0, 1, 1);
+						0, 2, 1);
+		mFishTextureRegion = BitmapTextureAtlasTextureRegionFactory
+				.createTiledFromAsset(mBitmapTextureAtlas, this,
+						"fish_front.png", 0, 65, 4, 1);
 		mPillarTextureRegion = BitmapTextureAtlasTextureRegionFactory
 				.createFromAsset(BitmapTowerTextureAtlas, this, "tower.png", 0,
 						0);
 		mBackgroundTextureRegion = BitmapTextureAtlasTextureRegionFactory
 				.createFromAsset(BitmapBackgroundTextureAtlas, this,
 						"background.png", 0, 0);
-		
+
 		mEngine.getTextureManager().loadTexture(mBitmapTextureAtlas);
 		mEngine.getTextureManager().loadTexture(BitmapTowerTextureAtlas);
 		mEngine.getTextureManager().loadTexture(BitmapBackgroundTextureAtlas);
@@ -195,20 +204,27 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 				mBackgroundTextureRegion, vertexBufferObjectManager);
 		backgroundSprite.setHeight(mCamera.getHeight());
 
-		mOwlRunnerSprite = new Sprite(0.0f, 0.0f, mOwlRunTextureRegion,
-				vertexBufferObjectManager);
-		owlRunnerBody = PhysicsFactory.createBoxBody(mPhysicsWorld,
-				mOwlRunnerSprite, BodyType.DynamicBody, FIXTURE_DEF);
-
 		mPillarOneSprite = new Sprite(100.0f, 350.0f, mPillarTextureRegion,
 				vertexBufferObjectManager);
 		pillarOneBody = PhysicsFactory.createBoxBody(mPhysicsWorld,
 				mPillarOneSprite, BodyType.StaticBody, FIXTURE_DEF);
+		pillarOneBody.setUserData(new String("pillar1"));
+
+		mOwlySprite = new AnimatedSprite(mPillarOneSprite.getX(),
+				mPillarOneSprite.getY() - mOwlyTextureRegion.getHeight(),
+				mOwlyTextureRegion, vertexBufferObjectManager);
+		long[] eachFrmTime = { 1000, 90 };
+		int[] eachFrm = { 0, 1 };
+
+		mOwlySprite.animate(eachFrmTime, eachFrm);
+		owlRunnerBody = PhysicsFactory.createBoxBody(mPhysicsWorld,
+				mOwlySprite, BodyType.DynamicBody, FIXTURE_DEF);
 
 		mPillarTwoSprite = new Sprite(300.0f, 350.0f, mPillarTextureRegion,
 				vertexBufferObjectManager);
 		pillarTwoBody = PhysicsFactory.createBoxBody(mPhysicsWorld,
 				mPillarTwoSprite, BodyType.StaticBody, FIXTURE_DEF);
+		pillarOneBody.setUserData(new String("pillar1"));
 
 		Rectangle rect_top = new Rectangle(0, 0, CAMERA_WIDTH, 0,
 				vertexBufferObjectManager);
@@ -233,14 +249,14 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 				rect_bottom, BodyType.StaticBody, FIXTURE_DEF);
 		// attache the sprites to the scene
 		mScene.attachChild(backgroundSprite);
-		mScene.attachChild(mOwlRunnerSprite);
+		mScene.attachChild(mOwlySprite);
 		mScene.attachChild(mPillarOneSprite);
 		mScene.attachChild(mPillarTwoSprite);
 		mScene.attachChild(rect_left);
 		mScene.attachChild(rect_bottom);
 		mScene.attachChild(rect_right);
 		mScene.attachChild(rect_top);
-
+		
 		// Create the physics connector.
 		// This connector will help in updating the sprite ui positions
 		// and rotations by getting the data from the sprite body
@@ -250,8 +266,8 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 		// is assigned to this Physics world.
 		boolean update_position = true;
 		boolean update_rotation = true;
-		PhysicsConnector owlRunnerConnector = new PhysicsConnector(
-				mOwlRunnerSprite, owlRunnerBody, update_position, false);
+		PhysicsConnector owlRunnerConnector = new PhysicsConnector(mOwlySprite,
+				owlRunnerBody, update_position, false);
 		PhysicsConnector pillarOneConnector = new PhysicsConnector(
 				mPillarOneSprite, pillarOneBody, update_position,
 				update_rotation);
@@ -290,24 +306,20 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 		mScene.attachChild(mCollionsText);
 		mScene.attachChild(mEngineUpdateText);
 
-		final float centerX = (OwlActivity.CAMERA_WIDTH - this.mOwlRunTextureRegion
+		final float centerX = (OwlActivity.CAMERA_WIDTH - this.mOwlyTextureRegion
 				.getWidth()) / 2;
-		final float centerY = (OwlActivity.CAMERA_HEIGHT - this.mOwlRunTextureRegion
+		final float centerY = (OwlActivity.CAMERA_HEIGHT - this.mOwlyTextureRegion
 				.getHeight()) / 2;
-		final Owl owl = new Owl(centerX, centerY, this.mOwlRunTextureRegion,
+		final Fish fish = new Fish(centerX, OwlActivity.CAMERA_HEIGHT, this.mFishTextureRegion,
 				this.getVertexBufferObjectManager());
-		FixtureDef fixdef = PhysicsFactory.createFixtureDef(1, 1, 1);
-		Body owlAutoRunnerBody = PhysicsFactory.createBoxBody(mPhysicsWorld,
-				owl, BodyType.DynamicBody, fixdef);
-		owl.setUserData(owlAutoRunnerBody);
-		PhysicsConnector owlAutoRunnerConnector = new PhysicsConnector(owl,
-				owlAutoRunnerBody, update_position, false);
-		mPhysicsWorld.registerPhysicsConnector(owlAutoRunnerConnector);
-
-		this.mScene.registerTouchArea(mOwlRunnerSprite);
-		this.mScene.registerTouchArea(owl);
-
-		mScene.attachChild(owl);
+		fish.animate(200);
+		
+		final Fish fish2 = new Fish(centerX+120, OwlActivity.CAMERA_HEIGHT, this.mFishTextureRegion,
+				this.getVertexBufferObjectManager());
+		fish2.animate(200);
+		
+		this.mScene.attachChild(fish);
+		this.mScene.attachChild(fish2);
 
 		mPhysicsWorld.setContactListener(new ContactListener() {
 
@@ -331,12 +343,36 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 
 			@Override
 			public void beginContact(Contact contact) {
-				contact.getFixtureA();
-				contact.getFixtureB();
+				Body b1 = contact.getFixtureA().getBody();
+				Body b2 = contact.getFixtureB().getBody();
+				Object whichBody = b1.getUserData() == null ? b2
+						.getUserData():b1.getUserData() ;
+				Body b = b1.getType() == BodyType.DynamicBody ? b1:b2;
+						
+				if (whichBody != null) {
+					String which = (String) whichBody;
+					if (which.equals("pillar1")) {
+						
+						b.setAngularVelocity(20.0f);
+					}
+
+				}
 
 			}
 		});
 
+		TimerHandler timer = new TimerHandler(2000, new ITimerCallback() {
+			
+			@Override
+			public void onTimePassed(TimerHandler pTimerHandler) {
+				final Fish fish = new Fish(centerX+120, OwlActivity.CAMERA_HEIGHT, mFishTextureRegion,
+						getVertexBufferObjectManager());
+				fish.animate(200);
+				mScene.attachChild(fish);
+			}
+		});
+		mScene.registerUpdateHandler(timer);
+		
 		return mScene;
 	}
 
@@ -368,32 +404,40 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 		this.mFont.load();
 	}
 
-	private static class Owl extends AnimatedSprite {
+	private static class Fish extends AnimatedSprite {
 		private final PhysicsHandler mPhysicsHandler;
-
-		public Owl(final float pX, final float pY,
+		int Low = 10;
+		int High = (int) OwlActivity.FISH_VELOCITY;
+		Random random = new Random();
+		float velocity;
+		
+		public Fish(final float pX, final float pY,
 				final TiledTextureRegion pTextureRegion,
 				final VertexBufferObjectManager pVertexBufferObjectManager) {
 			super(pX, pY, pTextureRegion, pVertexBufferObjectManager);
 			this.mPhysicsHandler = new PhysicsHandler(this);
 			this.registerUpdateHandler(this.mPhysicsHandler);
-			this.mPhysicsHandler.setVelocity(OwlActivity.DEMO_VELOCITY,
-					OwlActivity.DEMO_VELOCITY);
+			velocity = (float)random.nextInt(High-Low) + Low;
+			this.mPhysicsHandler.setVelocityY(velocity);
 		}
 
 		@Override
 		protected void onManagedUpdate(final float pSecondsElapsed) {
-			if (this.mX < 0) {
-				this.mPhysicsHandler.setVelocityX(OwlActivity.DEMO_VELOCITY);
-			} else if (this.mX + this.getWidth() > OwlActivity.CAMERA_WIDTH) {
-				this.mPhysicsHandler.setVelocityX(-OwlActivity.DEMO_VELOCITY);
+			if (this.mY < 0) {
+				this.mPhysicsHandler.setVelocityY(velocity);
+			} else if (this.mY + (this.getHeight() / 2) > OwlActivity.CAMERA_HEIGHT) {
+				GLState gs = new GLState();
+				gs.rotateProjectionGLMatrixf(180.0f, this.getX(), this.getY(), 0);
+				this.applyRotation(gs);
+				this.mPhysicsHandler.setVelocityY(-velocity);
+
+				// float bugAngle = 180 + (float) Math.toDegrees(Math.atan2(
+				// (targetY - this.getRotationCenterY() - this.getY()),
+				// (targetX - this.getRotationCenterX() - this.getX())));
+				// this.setRotation(bugAngle);
+
 			}
 
-			if (this.mY < 0) {
-				this.mPhysicsHandler.setVelocityY(OwlActivity.DEMO_VELOCITY);
-			} else if (this.mY + this.getHeight() > OwlActivity.CAMERA_HEIGHT) {
-				this.mPhysicsHandler.setVelocityY(-OwlActivity.DEMO_VELOCITY);
-			}
 			super.onManagedUpdate(pSecondsElapsed);
 		}
 	}
@@ -437,4 +481,6 @@ public class OwlActivity extends SimpleBaseGameActivity implements
 		return false;
 	}
 
+	
+	
 }
