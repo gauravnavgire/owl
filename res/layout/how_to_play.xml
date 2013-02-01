@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    tools:context=".HowToPlayActivity" >
 
 <!--======================CODE INSERTED BY SEVENTYNINE APPJACKET===================-->
 <!--PLATFORM SDK OBJECT STARTS HERE-->
@@ -14,9 +14,12 @@
 >
    </platform.sdk.HandleLayout><!--PLATFORM SDK OBJECT ENDS HERE-->
 
-    <org.andengine.opengl.view.RenderSurfaceView
-        android:id="@+id/xmllayoutexample_rendersurfaceview"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
+    <TextView
+        android:layout_width="wrap_content"
+android:layout_below="@id/custViewHeader"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="@string/howtoplay" />
 
-</LinearLayout>
+</RelativeLayout>

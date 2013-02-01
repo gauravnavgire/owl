@@ -1,6 +1,6 @@
 package com.game.owly;
 
-import android.app.Activity;
+import android.os.Bundle;
 //======================CODE INSERTED BY SEVENTYNINE APPJACKET===================
 //PLATFORM SDK OBJECT STARTS HERE
 import android.widget.*;
@@ -13,16 +13,10 @@ import java.util.*;
 import android.content.Intent;
 import android.view.ViewGroup.LayoutParams;
 //PLATFORM SDK OBJECT ENDS HERE
-import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.view.View.OnClickListener;
+import android.app.Activity;
+import android.view.Menu;
 
-public class MainMenuActivity extends Activity implements OnClickListener {
+public class HowToPlayActivity extends Activity {
 
 //======================CODE INSERTED BY SEVENTYNINE APPJACKET===================
 //PLATFORM SDK OBJECT STARTS HERE
@@ -34,12 +28,7 @@ public class MainMenuActivity extends Activity implements OnClickListener {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		// Remove title bar
-		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-		// Remove notification bar
-		this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-				WindowManager.LayoutParams.FLAG_FULLSCREEN);
-		setContentView(R.layout.activity_main_menu);
+		setContentView(R.layout.how_to_play);
 //======================CODE INSERTED BY SEVENTYNINE APPJACKET===================
 //PLATFORM SDK OBJECT STARTS HERE
 ExploringDBForBanners.iRefreshRate = 30000;
@@ -51,37 +40,8 @@ HandleLayout.contextAppContext = getApplicationContext();
 
 //PLATFORM SDK OBJECT ENDS HERE
 
-
-		findViewById(R.id.play_btn).setOnClickListener(this);
-		findViewById(R.id.howtoplay_btn).setOnClickListener(this);
-		findViewById(R.id.about_btn).setOnClickListener(this);
 	}
 
-	@Override
-	public void onClick(View v) {
-		switch (v.getId()) {
-		case R.id.play_btn:
-			Intent gameIntent = new Intent(getApplicationContext(),
-					OwlActivity.class);
-			startActivity(gameIntent);
-			break;
-		case R.id.howtoplay_btn:
-			startActivity(new Intent(getApplicationContext(),
-					HowToPlayActivity.class));
-			break;
-		case R.id.about_btn:
-			Builder dialog = new AlertDialog.Builder(this)
-					.setIcon(android.R.drawable.ic_dialog_info)
-					.setTitle(R.string.about_title)
-					.setMessage(R.string.about_message);
-			dialog.show();
-			break;
-
-		default:
-			break;
-		}
-
-	}
 
 //======================CODE INSERTED BY SEVENTYNINE APPJACKET===================
 //PLATFORM SDK OBJECT STARTS HERE

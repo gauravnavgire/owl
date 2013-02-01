@@ -1,4 +1,24 @@
+
+<!--======================CODE INSERTED BY SEVENTYNINE APPJACKET===================-->
+<!--PLATFORM SDK OBJECT STARTS HERE-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_width="fill_parent"
+android:layout_height="wrap_content"
+android:orientation="vertical">
+<!--PLATFORM SDK OBJECT ENDS HERE-->
+
+<!--======================CODE INSERTED BY SEVENTYNINE APPJACKET===================-->
+<!--PLATFORM SDK OBJECT STARTS HERE-->
+  <platform.sdk.HandleLayout
+   xmlns:android="http://schemas.android.com/apk/res/android"
+   android:id="@+id/custViewHeader"
+   android:layout_width="fill_parent"
+   android:layout_height="wrap_content"
+>
+   </platform.sdk.HandleLayout><!--PLATFORM SDK OBJECT ENDS HERE-->
+
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_below="@id/custViewHeader"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
     android:layout_width="match_parent"
@@ -69,3 +89,9 @@
         android:src="@drawable/speaker" />
 
 </FrameLayout>
+
+<!--======================CODE INSERTED BY SEVENTYNINE APPJACKET===================-->
+<!--PLATFORM SDK OBJECT STARTS HERE-->
+</RelativeLayout>
+<!--PLATFORM SDK OBJECT ENDS HERE-->
+
