@@ -4,22 +4,19 @@
     android:layout_height="match_parent"
     tools:context=".HowToPlayActivity" >
 
-<!--======================CODE INSERTED BY SEVENTYNINE APPJACKET===================-->
-<!--PLATFORM SDK OBJECT STARTS HERE-->
-  <platform.sdk.HandleLayout
-   xmlns:android="http://schemas.android.com/apk/res/android"
-   android:id="@+id/custViewHeader"
-   android:layout_width="fill_parent"
-   android:layout_height="wrap_content"
->
-   </platform.sdk.HandleLayout><!--PLATFORM SDK OBJECT ENDS HERE-->
-
     <TextView
+        android:id="@+id/help"
         android:layout_width="wrap_content"
-android:layout_below="@id/custViewHeader"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:text="@string/howtoplay" />
+
+    <Button
+        android:id="@+id/fetch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Fetch"
+        android:layout_below="@id/help" />
 
 </RelativeLayout>

@@ -4,16 +4,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-<!--======================CODE INSERTED BY SEVENTYNINE APPJACKET===================-->
-<!--PLATFORM SDK OBJECT STARTS HERE-->
-  <platform.sdk.HandleLayout
-   xmlns:android="http://schemas.android.com/apk/res/android"
-   android:id="@+id/custViewHeader"
-   android:layout_width="fill_parent"
-   android:layout_height="wrap_content"
->
-   </platform.sdk.HandleLayout><!--PLATFORM SDK OBJECT ENDS HERE-->
-
     <org.andengine.opengl.view.RenderSurfaceView
         android:id="@+id/xmllayoutexample_rendersurfaceview"
         android:layout_width="fill_parent"
